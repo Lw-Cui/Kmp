@@ -1,12 +1,17 @@
-#include <cstdio>
+#include <iostream>
+#include <fstream>
+#include <queue>
 #include <cstring>
-int main() {
-	char text[100] = "BCBAABACAABABACAA";
-	int t_len = strlen(text);
-	char pattern[100] = "ABABAC";
-	int p_len = strlen(pattern);
+#include <string>
+#include <set>
+#include <map>
+using namespace std;
+const int COLUMN = 80;
+queue<int> query(const string &sentence, const string &pattern) {
+	int t_len = sentence.length();
+	int p_len = pattern.length();
 	// next[i] indicates the max-prefix of pattern[0, i](inclusive).
-	int next[100];
+	vector<int> next(p_len);
 	next[0] = 0;
 	for (int i = 1; i < p_len; i++) {
 		/* P is also the next element of end of max-prefix.
@@ -28,21 +33,66 @@ int main() {
 		else next[i] = p + 1;
 	}
  	int i = 0, j = 0;
-	while (i < t_len && j < p_len)
-		// if text and pattern corresponsive element match, then increase them.
-		if (text[i] == pattern[j]) i++, j++;
-		// if they don't match at all and j == 0 then text should move its index.
+	queue<int> pos;
+	while (i < t_len && j < p_len) {
+		// if sentence and pattern corresponsive element match, then increase them.
+		if (sentence[i] == pattern[j]) i++, j++;
+		// if they don't match at all and j == 0 then sentence should move its index.
 		else if (j == 0) i++;
-		// Maybe there is other similar pattern in text, we only move j to next[j - 1]
+		// Maybe there is other similar pattern in sentence, we only move j to next[j - 1]
 		else j = next[j - 1];
-	if (j == p_len) {
-		for (int ite = 0; ite < t_len; ite++) {
-			if (ite == i || ite == i - j) putchar(' ');
-			putchar(text[ite]);
+		if (j == p_len) {
+			pos.push(i - j);
+			j = 0;
 		}
-		printf("\n");
-		for (int ite = 0; ite <= i - j; ite++) putchar(' ');
-		puts(pattern);
 	}
+	return pos;
+}
+
+map<int, queue<int> > query(const vector<string> &article, const string pattern) {
+	map<int, queue<int> > res;
+	for (int i = 0; i < article.size(); i++)
+		res[i] = query(article[i], pattern);
+	return res;
+}
+
+void print(ostream &out, const string& sentence, queue<int> pos) {
+	int len = sentence.length();
+	int line = len / COLUMN + 1;
+	int p = -1;
+	if (!pos.empty()) { 
+		p = pos.front(); pos.pop();
+	}
+	for (int i = 0; i < line; i++) {
+		out << endl << sentence.substr(i * COLUMN, COLUMN);
+		int dist = i * COLUMN;
+		int flag = true;
+		while (p >= i * COLUMN && p < (i + 1) * COLUMN) {
+			if (flag) {flag = !flag; out << endl;}
+			for (int blank = 0; blank < p - dist; blank++) out << " ";
+			out << "^";
+			if (!pos.empty()) {
+				dist = p; p = pos.front(); pos.pop(); 
+			} else break;
+		}
+	}
+}
+
+int main(int argc, char *argv[]) {
+	if (argc == 1) {
+		cout << "Need File name. Please try again." << endl;
+		return -1;
+	}
+	ifstream fin(argv[1]);
+	vector<string> article;
+	string sentence;
+	while (getline(fin, sentence))
+		article.push_back(sentence);
+	map<int, queue<int> > line = query(article, "the");
+	for (int i = 0; i < article.size(); i++) {
+		cout << "\n\nline (" << i << ")";
+		print(cout, article[i], line[i]);
+	}
+	cout << endl;
 	return 0;
 }
