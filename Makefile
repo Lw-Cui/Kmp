@@ -1,5 +1,5 @@
-CC		:= clang++
-CXXFLAG	:= -g -O0 -Wall -Wextra
+CC		:= icc
+CXXFLAG	:= -g -O2 -Wall -Wextra -qopt-report=3
 
 all		: Kmp
 
