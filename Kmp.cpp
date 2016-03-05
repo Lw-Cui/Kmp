@@ -49,31 +49,43 @@ queue<int> query(const string &sentence, const string &pattern) {
 	return pos;
 }
 
-map<int, queue<int> > query(const vector<string> &article, const string pattern) {
+map<int, queue<int> > query(const vector<string> &article,
+		const string pattern, int &cnt) {
 	map<int, queue<int> > res;
-	for (int i = 0; i < article.size(); i++)
+	for (int i = 0; i < article.size(); i++) {
 		res[i] = query(article[i], pattern);
+		cnt += res[i].size();
+	}
 	return res;
 }
 
 void print(ostream &out, const string& sentence, queue<int> pos) {
 	int len = sentence.length();
-	int line = len / COLUMN + 1;
+	// Because of the screen limitation there is at most COLUMN character in a line.
+	int line = len / COLUMN + (len % COLUMN ? 1: 0);
 	int p = -1;
 	if (!pos.empty()) { 
 		p = pos.front(); pos.pop();
 	}
+	// Divide the whole sentence into len / COLUMN( + 1) line.
 	for (int i = 0; i < line; i++) {
-		out << endl << sentence.substr(i * COLUMN, COLUMN);
-		int dist = i * COLUMN;
-		int flag = true;
+		int offset = i * COLUMN;
+		out << endl << sentence.substr(offset, COLUMN);
+		bool flag = true;
+		// when the postion is in this line we print "^"
 		while (p >= i * COLUMN && p < (i + 1) * COLUMN) {
-			if (flag) {flag = !flag; out << endl;}
-			for (int blank = 0; blank < p - dist; blank++) out << " ";
+			if (flag) {
+				out << endl; flag = !flag;
+			}
+			// offset indicates the distance between "^"
+			for (int blank = 0; blank < p - offset; blank++) out << " ";
 			out << "^";
 			if (!pos.empty()) {
-				dist = p; p = pos.front(); pos.pop(); 
-			} else break;
+			// update offset
+				offset = p + 1; p = pos.front(); pos.pop(); 
+			} else {
+				p = -1;
+			}
 		}
 	}
 }
@@ -88,11 +100,17 @@ int main(int argc, char *argv[]) {
 	string sentence;
 	while (getline(fin, sentence))
 		article.push_back(sentence);
-	map<int, queue<int> > line = query(article, "the");
-	for (int i = 0; i < article.size(); i++) {
-		cout << "\n\nline (" << i << ")";
-		print(cout, article[i], line[i]);
-	}
+	int cnt = 0;
+	clock_t start = clock();
+	map<int, queue<int> > line = query(article, "there", cnt);
+	clock_t end = clock();
+	printf("Find pattern %d, Elapse time: %.2f",
+			cnt, (double)(end - start) / CLOCKS_PER_SEC);
+	for (int i = 0; i < article.size(); i++)
+		if (!line[i].empty()) {
+			cout << "\n\nline (" << i << ")";
+			print(cout, article[i], line[i]);
+		}
 	cout << endl;
 	return 0;
 }
