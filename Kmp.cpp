@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstdlib>
 #include <fstream>
 #include <queue>
 #include <cstring>
@@ -7,8 +8,9 @@
 #include <map>
 using namespace std;
 const int COLUMN = 80;
+const int ROW = 35;
 queue<int> query(const string &sentence, const string &pattern) {
-	int t_len = sentence.length();
+    int t_len = sentence.length();
 	int p_len = pattern.length();
 	// next[i] indicates the max-prefix of pattern[0, i](inclusive).
 	vector<int> next(p_len);
@@ -51,12 +53,23 @@ queue<int> query(const string &sentence, const string &pattern) {
 
 map<int, queue<int> > query(const vector<string> &article,
 		const string pattern, int &cnt) {
-	map<int, queue<int> > res;
+    map<int, queue<int> > res;
 	for (int i = 0; i < article.size(); i++) {
 		res[i] = query(article[i], pattern);
 		cnt += res[i].size();
 	}
 	return res;
+}
+
+ostream& newline(ostream &out) {
+    static int num = 0;
+    out << endl;
+    if (++num > ROW) {
+        getchar();
+        system("clear");
+        num = 0;
+    }
+    return out;
 }
 
 void print(ostream &out, const string& sentence, queue<int> pos) {
@@ -70,12 +83,12 @@ void print(ostream &out, const string& sentence, queue<int> pos) {
 	// Divide the whole sentence into len / COLUMN( + 1) line.
 	for (int i = 0; i < line; i++) {
 		int offset = i * COLUMN;
-		out << endl << sentence.substr(offset, COLUMN);
+		newline(out) << sentence.substr(offset, COLUMN);
 		bool flag = true;
 		// when the postion is in this line we print "^"
 		while (p >= i * COLUMN && p < (i + 1) * COLUMN) {
 			if (flag) {
-				out << endl; flag = !flag;
+				newline(out); flag = !flag;
 			}
 			// offset indicates the distance between "^"
 			for (int blank = 0; blank < p - offset; blank++) out << " ";
@@ -91,7 +104,7 @@ void print(ostream &out, const string& sentence, queue<int> pos) {
 }
 
 int main(int argc, char *argv[]) {
-	if (argc == 1) {
+	if (argc < 2) {
 		cout << "Need File name. Please try again." << endl;
 		return -1;
 	}
@@ -102,13 +115,14 @@ int main(int argc, char *argv[]) {
 		article.push_back(sentence);
 	int cnt = 0;
 	clock_t start = clock();
-	map<int, queue<int> > line = query(article, "there", cnt);
+    map<int, queue<int> > line = query(article, argv[2], cnt);
 	clock_t end = clock();
 	printf("Find pattern %d, Elapse time: %.2f",
 			cnt, (double)(end - start) / CLOCKS_PER_SEC);
 	for (int i = 0; i < article.size(); i++)
 		if (!line[i].empty()) {
-			cout << "\n\nline (" << i << ")";
+            newline(cout);
+			newline(cout) << "line (" << i << ")";
 			print(cout, article[i], line[i]);
 		}
 	cout << endl;
