@@ -54,7 +54,7 @@ queue<int> query(const string &sentence, const string &pattern) {
 map<int, queue<int> > query(const vector<string> &article,
 		const string pattern, int &cnt) {
     map<int, queue<int> > res;
-	for (int i = 0; i < article.size(); i++) {
+	for (size_t i = 0; i < article.size(); i++) {
 		res[i] = query(article[i], pattern);
 		cnt += res[i].size();
 	}
@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
 	clock_t end = clock();
 	printf("Find pattern %d, Elapse time: %.2f",
 			cnt, (double)(end - start) / CLOCKS_PER_SEC);
-	for (int i = 0; i < article.size(); i++)
+	for (size_t i = 0; i < article.size(); i++)
 		if (!line[i].empty()) {
             newline(cout);
 			newline(cout) << "line (" << i << ")";
